@@ -8,6 +8,7 @@ import time
 import urllib.request
 import os
 import wget
+import requests
 
 from selenium import webdriver
 from selenium.webdriver import ActionChains
@@ -85,4 +86,36 @@ following = WebDriverWait(driver, 10).until(
     EC.element_to_be_clickable((By.XPATH, "//*[@id='react-root']/section/main/div/header/section/ul/li[3]/a/span")))
 print("Number of Following: " + following.text)
 
-driver.quit()
+time.sleep(2)
+# scroll for more images
+driver.execute_script("window.scrollTo(0,4000)")
+time.sleep(1)
+driver.execute_script("window.scrollTo(0,4000)")
+
+# posts url
+
+posts = []
+links = driver.find_elements_by_tag_name('a')
+for link in links:
+    post = link.get_attribute('href')
+    if '/p/' in post:
+        posts.append(post)
+
+
+download_url = []
+for post in posts:
+    headers = {'User-Agent': 'Mozilla'}
+    r = requests.get('{}?__a=1'.format(post), headers=headers)
+    data = r.json()['graphql']['shortcode_media']
+    shortcode = data['shortcode']
+    is_video = data['is_video']
+    if is_video:
+        download_url.append('This is a video file')
+    else:
+        download_url.append('This is an image file')
+
+# joins the two lists together side by side
+links = [''.join(x) for x in zip(posts, download_url)]
+
+# prints links and whether the post is a video file or an image file
+print(links)
